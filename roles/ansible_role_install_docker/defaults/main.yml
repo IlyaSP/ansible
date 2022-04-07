@@ -1,0 +1,7 @@
+---
+# defaults file for ansible-role-install-docker
+docker_old_packages_ubuntu: [docker, docker-engine, docker.io, containerd, runc]
+docker_requirement_packages_ubuntu: [apt-transport-https, ca-certificates, curl, gnupg, lsb-release]
+docker_ubuntu: [docker-ce, docker-ce-cli, containerd.io]
+docker_old_packages_centos: [docker, docker-client, docker-client-latest, docker-common, docker-latest, docker-latest-logrotate, docker-logrotate, docker-engine]
+docker_centos: [docker-ce, docker-ce-cli, containerd.io]

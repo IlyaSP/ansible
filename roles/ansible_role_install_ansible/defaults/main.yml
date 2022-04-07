@@ -1,0 +1,4 @@
+---
+# defaults file for ansible_role_install_ansible
+ansible_packages: [ setuptools, setuptools-rust, wheel, cryptography, paramiko, flake8, ansible, "molecule[docker,lint]"]
+#ansible_python_interpreter: /usr/bin/python3

@@ -1,0 +1,24 @@
+---
+# tasks file for ansible_role_install_git
+- name: git | Check install git
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: git | Print the package facts
+  ansible.builtin.debug:
+    msg: "Versions {{ ansible_facts.packages['git'][0].version }} of git alredy installed!"
+  when: "'git' in ansible_facts.packages"
+
+- name: git | Install Git Ubuntu
+  apt:
+    name: git
+    state: present
+    update_cache: yes
+  when: (ansible_facts['distribution']=='Ubuntu' and 'git' not in ansible_facts.packages)
+
+- name: git | Install Git CentOS
+  yum:
+    name: git
+    state: present
+    update_cache: yes
+  when: (ansible_facts['distribution']=='CentOS' and 'git' not in ansible_facts.packages)

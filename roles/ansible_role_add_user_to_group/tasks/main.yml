@@ -1,0 +1,47 @@
+---
+# tasks file for ansible_role_add_user_to_group
+- name: add_user_to_group | Collect info about users
+  getent:
+    database: passwd
+
+- name: add_user_to_group | Show result user check
+  debug:
+     msg: "User '{{ item }}' not exist"
+  when: " item not in ansible_facts.getent_passwd"
+  loop: "{{ add_user_to_group_users | lower }}"
+
+- name: add_user_to_group | Collect info about group
+  getent:
+    database: group
+
+- name: add_user_to_group | Show result group check
+  debug:
+     msg: "Group '{{ item }}' not exist"
+  when: " item not in ansible_facts.getent_group"
+  loop: "{{ add_user_to_group_groups | lower }}"
+
+- name: add_user_to_group | add user to Group item.0
+  ansible.builtin.user:
+     name: "{{ item[0] }}"
+     groups: "{{ item[1] }}"
+     append: yes
+  when: " item.0 in ansible_facts.getent_passwd and item.1 in ansible_facts.getent_group"
+  loop: "{{ add_user_to_group_users|product(add_user_to_group_groups)|list }}"
+
+
+# - name: show users groups
+#   raw: id {{ item }}
+#   register: users_id
+#   changed_when: false
+#   loop: "{{ users | lower }}"
+#
+# - name: show result id
+#   debug:
+#     var: users_id
+
+# пример вложенного цикла
+# - name: show loop {{ item.0 }}
+#   debug:
+#     msg: "'{{ item.0 }}' '{{ item.1 }}'"
+#   when: " item.0 in ansible_facts.getent_passwd and item.1 in ansible_facts.getent_group"
+#   loop: "{{ users|product(user_group)|list }}"

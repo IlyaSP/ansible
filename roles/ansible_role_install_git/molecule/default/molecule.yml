@@ -1,0 +1,41 @@
+---
+dependency:
+  name: galaxy
+  env:
+    LANG: C.UTF-8
+#  options:
+#    role-file: requirements.yml
+driver:
+  name: docker
+lint: |
+  set -e
+  yamllint .
+  ANSIBLE_ROLES_PATH=../../roles ansible-lint
+  flake8
+#  ansible-lint
+
+platforms:
+  - name: ubuntu20
+    image: ubuntu:20.04
+  - name: ubuntu18
+    image: ubuntu:18.04
+    env:
+      LC_CTYPE: C.UTF-8
+  - name: centos
+    image: centos:8
+    privileged: True
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+#    pre_build_image: true
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "../../roles"
+verifier:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "../../roles"

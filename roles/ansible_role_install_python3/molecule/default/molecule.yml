@@ -1,0 +1,23 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint: |
+  set -e
+  yamllint .
+  ansible-lint
+  flake8
+platforms:
+  - name: ubuntu
+    image: python:3.9.6-slim
+    pre_build_image: true
+  - name: centos
+    image: centos:7
+  - name: alpine
+    image: alpine:latest
+#    pre_build_image: true
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

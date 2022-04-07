@@ -1,0 +1,132 @@
+---
+# tasks file for ansible-role-install-docker
+
+#Docker Ubuntu
+
+- name: docker | Remove old docker installation Ubuntu
+  apt:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ docker_old_packages_ubuntu }}"
+  when: (ansible_facts['distribution']=='Ubuntu')
+
+- name: docker | install requirement packages Ubuntu
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop: "{{ docker_requirement_packages_ubuntu }}"
+  when: (ansible_facts['distribution']=='Ubuntu')
+
+- name: docker | Add key repository Ubuntu
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: (ansible_facts['distribution']=='Ubuntu')
+
+- name: docker | Add docker repo ubuntu
+  ansible.builtin.apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }} {{ ansible_distribution_release }} stable
+    state: present
+    update_cache: yes
+  when: (ansible_facts['distribution']=='Ubuntu')
+
+- name: docker | install docker Ubuntu
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop: "{{ docker_ubuntu }}"
+  when: (ansible_facts['distribution']=='Ubuntu')
+
+- name: docker |  Start Docker service Ubuntu
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  when: (ansible_facts['distribution']=='Ubuntu')
+
+- name: docker | download docker_compose Ubuntu
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}
+    dest: /usr/local/bin/docker-compose
+    mode: u+x,g+x
+  when: (ansible_facts['distribution']=='Ubuntu')
+
+- name: docker | Create symbolic link docker-docker_compose
+  ansible.builtin.file:
+    src: /usr/local/bin/docker-compose
+    dest: /usr/bin/docker-compose
+    state: link
+  when: (ansible_facts['distribution']=='Ubuntu')
+
+# Docker CentOS
+
+- name: docker | Remove old docker installation CentOS
+  yum:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ docker_old_packages_centos }}"
+  when: (ansible_facts['distribution']=='CentOS')
+
+- name:  docker | Add docker repo CentOS
+  yum_repository:
+    name: docker-ce
+    description: docker repo
+    baseurl: https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/{{ ansible_distribution_version }}/{{ ansible_architecture }}/stable/
+    state: present
+    gpgcheck: no
+  register: result
+  when: (ansible_facts['distribution']=='CentOS')
+
+- name: docker | install docker CentOS
+  yum:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop: "{{ docker_centos }}"
+  when: (ansible_facts['distribution']=='CentOS')
+
+- name: docker |  Start Docker service CentOS
+  service:
+    name: docker.service
+    enabled: yes
+  when: (ansible_facts['distribution']=='CentOS')
+
+- name: docker | download docker_compose CentOS
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}
+    dest: /usr/local/bin/docker-compose
+    mode: u+x,g+x
+  when: (ansible_facts['distribution']=='CentOS')
+
+- name: docker | Create symbolic link docker-docker_compose
+  ansible.builtin.file:
+    src: /usr/local/bin/docker-compose
+    dest: /usr/bin/docker-compose
+    state: link
+  when: (ansible_facts['distribution']=='CentOS')
+
+# ========================== Result ============================================
+
+- name: docker | Populate packages facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: docker | Print the python3 package facts
+  ansible.builtin.debug:
+    msg: "Versions {{ ansible_facts.packages['docker-ce'][0].version }} of docker are installed!"
+  when: "'docker-ce' in ansible_facts.packages"
+
+- name: docker | Populate services facts
+  service_facts:
+
+- name: gitlab_runner | Print gitlab_runner service status Ubuntu
+  ansible.builtin.debug:
+    msg: "Status service docker is {{ ansible_facts.services['docker'].state }}!"
+  when: "ansible_facts['distribution']=='Ubuntu' and 'docker' in ansible_facts.services"
+
+- name: gitlab_runner | Print gitlab_runner service status CentOS
+  ansible.builtin.debug:
+    msg: "State service docker is {{ ansible_facts.services['docker.service'].state }} and {{ ansible_facts.services['docker.service'].status }}!"
+  when: "ansible_facts['distribution']=='CentOS' and 'docker.service' in ansible_facts.services"

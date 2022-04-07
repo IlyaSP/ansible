@@ -1,0 +1,4 @@
+---
+# defaults file for ansible_role_add_user_to_group
+add_user_to_group_users: [gitlab-runner, root]
+add_user_to_group_groups: [docker]

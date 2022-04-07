@@ -1,0 +1,154 @@
+---
+# tasks file for ansible_role_install_gitlab_runner
+
+# =============================== For all OS ===================================
+
+- name: gitlab_runner | Check install gitlab_runner
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Print the package facts
+  ansible.builtin.debug:
+    msg: "Versions {{ ansible_facts.packages['gitlab-runner'][0].version }} of gitlab_runner alredy installed!"
+  when: "'gitlab-runner' in ansible_facts.packages"
+
+- name: gitlab_runner | Check install curl
+  ansible.builtin.debug:
+    msg: "{{ ansible_facts.packages['curl'] }} versions of curl are installed!"
+  when: "'curl' in ansible_facts.packages"
+
+# ============================= Ubuntu =========================================
+
+- name: gitlab_runner | install curl Ubuntu
+  apt:
+    name: curl
+    state: present
+    update_cache: yes
+  when: (ansible_facts['distribution']=='Ubuntu' and 'curl' not in ansible_facts.packages)
+
+- name: gitlab_runner | Download script for install repo gitlab_runner Ubuntu
+  get_url:
+    url: https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh
+    dest: home/gitlab_runner.deb.sh
+    mode: u+x,g+x,o+x
+  when: (ansible_facts['distribution']=='Ubuntu' and 'gitlab-runner' not in ansible_facts.packages)
+
+- name: gitlab_runner | Install repo gitlab_runner Ubuntu
+  command: /home/gitlab_runner.deb.sh
+  when: (ansible_facts['distribution']=='Ubuntu' and 'gitlab-runner' not in ansible_facts.packages)
+
+- name: gitlab_runner | install gitlab_runner Ubuntu
+  apt:
+    name: gitlab-runner
+    state: present
+    update_cache: yes
+  when: (ansible_facts['distribution']=='Ubuntu' and 'gitlab-runner' not in ansible_facts.packages)
+
+- name: gitlab_runner |  Start gitlab_runner service Ubuntu
+  service:
+    name: gitlab-runner
+    state: started
+    enabled: yes
+  when: (ansible_facts['distribution']=='Ubuntu')
+
+- name: gitlab_runner | Delete gitlab_runner.deb.sh Ubuntu
+  ansible.builtin.file:
+    path: /home/gitlab_runner.deb.sh
+    state: absent
+  when: (ansible_facts['distribution']=='Ubuntu' and 'gitlab-runner' not in ansible_facts.packages)
+
+# ============================== CentOS ========================================
+
+- name: gitlab_runner | install curl CentOS
+  yum:
+    name: curl
+    state: present
+    update_cache: yes
+  when: (ansible_facts['distribution']=='CentOS' and 'curl' not in ansible_facts.packages)
+
+- name: gitlab_runner | Download script for install repo gitlab_runner CentOS
+  get_url:
+    url: https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh
+    dest: home/gitlab_runner.rpm.sh
+    mode: u+x,g+x,o+x
+  when: (ansible_facts['distribution']=='CentOS' and 'gitlab-runner' not in ansible_facts.packages)
+
+- name: gitlab_runner | Install repo gitlab_runner CentOS
+  command: /home/gitlab_runner.rpm.sh
+  when: (ansible_facts['distribution']=='CentOS' and 'gitlab-runner' not in ansible_facts.packages)
+
+- name: gitlab_runner | install gitlab_runner CentOS
+  yum:
+    name: gitlab-runner
+    state: present
+    update_cache: yes
+  when: (ansible_facts['distribution']=='CentOS' and 'gitlab-runner' not in ansible_facts.packages)
+
+- name: gitlab_runner |  Start gitlab_runner service CentOS
+  service:
+    name: gitlab-runner
+    state: started
+    enabled: yes
+#  ignore_errors: true
+  when: (ansible_facts['distribution']=='CentOS')
+
+- name: gitlab_runner | Delete gitlab_runner.rpm.sh CentOS
+  ansible.builtin.file:
+    path: /home/gitlab_runner.rpm.sh
+    state: absent
+  when: (ansible_facts['distribution']=='CentOS' and 'gitlab-runner' not in ansible_facts.packages)
+
+# ============================= For all OS =====================================
+- name: gitlab_runner | Check user gitlab_runner exist
+  getent:
+    database: passwd
+    key: gitlab-runner
+    fail_key: no
+  register: user_check
+
+- name: gitlab_runner | Show result user check
+  debug:
+     msg: "User gitlab-runner exist!!!!"
+  when: "'gitlab-runner' in ansible_facts.getent_passwd"
+
+- name: gitlab_runner | Show result user check
+  debug:
+     msg: "User gitlab-runner not exist"
+  when: "'gitlab-runner' not in ansible_facts.getent_passwd"
+
+- name: gitlab_runner | Check group gitlab_runner exist
+  getent:
+    database: group
+    key: gitlab-runner
+
+- name: gitlab_runner | Show result group check
+  debug:
+     msg: "Group gitlab-runner exist"
+  when: "'gitlab-runner' in ansible_facts.getent_group"
+
+- name: gitlab_runner | Show result group check
+  debug:
+     msg: "Group gitlab-runner not exist"
+  when: "'gitlab-runner' not in ansible_facts.getent_group"
+
+- name: gitlab_runner | Populate packages facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: gitlab_runner | Print the gitlab_runner package facts
+  ansible.builtin.debug:
+    msg: "Versions {{ ansible_facts.packages['gitlab-runner'][0].version }} of gitlab_runner are installed!"
+  when: "'gitlab-runner' in ansible_facts.packages"
+
+- name: gitlab_runner | Populate services facts
+  service_facts:
+
+- name: gitlab_runner | Print gitlab_runner service status Ubuntu
+  ansible.builtin.debug:
+    msg: "Status service gitlab_runner is {{ ansible_facts.services['gitlab-runner'].state }}!"
+  when: "ansible_facts['distribution']=='Ubuntu' and 'gitlab-runner' in ansible_facts.services"
+
+- name: gitlab_runner | Print gitlab_runner service status CentOS
+  ansible.builtin.debug:
+    msg: "State service gitlab_runner is {{ ansible_facts.services['gitlab-runner.service'].state }} and {{ ansible_facts.services['gitlab-runner.service'].status }}!"
+  when: "ansible_facts['distribution']=='CentOS' and 'gitlab-runner.service' in ansible_facts.services"

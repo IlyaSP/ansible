@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: "Include ansible_role_add_user_to_group"
+      include_role:
+        name: "ansible_role_add_user_to_group"

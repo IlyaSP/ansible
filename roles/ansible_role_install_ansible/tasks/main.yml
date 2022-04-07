@@ -1,0 +1,39 @@
+---
+# tasks file for ansible_role_install_ansible
+
+# ============================= install ansible =========================================
+
+# - name: upgrade pip3
+#   raw: pip3 install --upgrade pip
+#   changed_when: false
+
+# - name: locale
+#   command: locale
+#   changed_when: false
+#   register: locale
+#
+# - name: show locale
+#   debug:
+#     var: locale
+
+- name: ansible | upgrade pip
+  pip:
+    name: pip
+    executable: pip3
+    extra_args: --upgrade
+
+- name: ansible | Install ansible
+  pip:
+    name: "{{ item }}"
+    executable: pip3
+    extra_args: --user
+  loop: "{{ ansible_packages }}"
+
+# - name: collect pip
+#   raw: pip3 list
+#   changed_when: false
+#   register: pip_list
+#
+# - name: show pip3
+#   debug:
+#     var: pip_list

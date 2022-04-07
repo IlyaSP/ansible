@@ -1,0 +1,90 @@
+---
+# tasks file for ansible_role_install_python3
+- name: python3 | Check for Python
+  raw: python3 --version
+  changed_when: false
+  failed_when: false
+  register: check_python
+
+- name: python3 | Check for Python pip
+  raw: pip3 --version
+  changed_when: false
+  failed_when: false
+  register: check_python_pip
+
+- name: python3 | collect info os_release
+  raw: cat /etc/*-release
+  changed_when: false
+  register: os_release
+
+- name: python3 | Status python3
+  debug:
+    msg: "python3 not install"
+  when: check_python.rc != 0
+
+- name: python3 | Status python3
+  debug:
+    msg: "python3 install"
+  when: check_python.rc == 0
+
+- name: python3 | Status pip3
+  debug:
+    msg: "pip3 not install"
+  when: check_python_pip.rc != 0
+
+- name: python3 | Status pip3
+  debug:
+    msg: "pip3 install"
+  when: check_python_pip.rc == 0
+
+
+# Ubuntu
+
+- name: python3 | install python3 ubuntu
+  raw: sudo apt-get -y update && sudo apt-get install {{ python3_packages_deb }}
+  when: os_release is search("Ubuntu") and check_python.rc != 0
+
+- name: python3 | install pip3 Ubuntu
+  raw: sudo apt-get -y update && sudo apt-get -y install {{ python3_pip3_packages_deb }}
+  when: os_release is search("Ubuntu") and check_python_pip.rc != 0
+
+# CentOS
+
+- name: python3 | install python3 centos
+  raw: sudo yum -y update && sudo yum -y install {{ python3_packages_centos }}
+  when: os_release is search("CentOS") and check_python.rc != 0
+
+- name: python3 | install pip3 CentOS
+  raw: sudo yum -y update && sudo yum -y install {{ python3_pip3_packages_centos }}
+  when: os_release is search("CentOS") and check_python_pip.rc != 0
+
+# Alpine
+
+- name: python3 | install python3 Alpine
+  raw: sudo apk -U upgrade && apk add --no-cache python3 py3-pip
+  when: os_release is search("Alpine") and check_python.rc != 0
+
+- name: python3 | install pip3 Alpine
+  raw: sudo apk -U upgrade && apk add --no-cache py3-pip
+  when: os_release is search("Alpine") and check_python_pip.rc != 0
+
+# ========================== Result ============================================
+
+- name: python3 | Populate packages facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: python3 | Print the python3 package facts
+  ansible.builtin.debug:
+    msg: "Versions {{ ansible_facts.packages['python3'][0].version }} of python3 are installed!"
+  when: "'python3' in ansible_facts.packages"
+
+- name: python3 | Print the pip3 package facts CentOS|Ubuntu
+  ansible.builtin.debug:
+    msg: "Versions {{ ansible_facts.packages['python3-pip'][0].version }} of pip3 are installed!"
+  when: '"python3" in ansible_facts.packages and os_release is search("CentOS|Ubuntu")'
+
+- name: python3 | Print the pip3 package facts Alpine
+  ansible.builtin.debug:
+    msg: "Versions {{ ansible_facts.packages['py3-pip'][0].version }} of pip3 are installed!"
+  when: '"python3" in ansible_facts.packages and os_release is search("Alpine")'

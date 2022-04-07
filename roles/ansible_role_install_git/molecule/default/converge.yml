@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  roles:
+    - ansible_role_install_python3
+    - ansible_role_install_git
